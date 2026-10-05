@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inequality and Interval Notation Matching Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#F5F8FC; --grid:#DFE7F1; --card:#FFFFFF; --slot:#EBF1F8;
+  --ink:#1B2740; --muted:#5A6A85; --line:#C3CFDF;
+  --pen:#2457D6; --pen-soft:#E4ECFD; --hl:#FFE45E;
+  --ok:#17794D; --ok-bg:#E2F4EA; --bad:#C23329; --bad-bg:#FCE6E3;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10182A; --grid:#18233A; --card:#1A2640; --slot:#16203A;
+    --ink:#E8EEF9; --muted:#9AAAC4; --line:#364A6C;
+    --pen:#7FA4FF; --pen-soft:#22345E; --hl:#8A7A1C;
+    --ok:#58D69B; --ok-bg:#12382A; --bad:#FF8B80; --bad-bg:#431C1A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10182A; --grid:#18233A; --card:#1A2640; --slot:#16203A;
+  --ink:#E8EEF9; --muted:#9AAAC4; --line:#364A6C;
+  --pen:#7FA4FF; --pen-soft:#22345E; --hl:#8A7A1C;
+  --ok:#58D69B; --ok-bg:#12382A; --bad:#FF8B80; --bad-bg:#431C1A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{
+  margin:0; min-height:100%;
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px;
+  color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.4;
+}
+.wrap{max-width:1360px; margin:0 auto; padding:20px 20px 40px;}
+
+/* header */
+header{display:flex; flex-wrap:wrap; gap:16px 28px; align-items:flex-end; justify-content:space-between; margin-bottom:18px;}
+h1{font-family:var(--serif); font-weight:600; font-size:clamp(24px,3.2vw,34px); line-height:1.15; margin:0 0 6px; letter-spacing:-.01em;}
+.sub{margin:0; color:var(--muted); max-width:58ch;}
+.controls{display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center;}
+.controls input{
+  font:inherit; color:var(--ink); background:var(--card); border:2px solid var(--line);
+  border-radius:8px; padding:8px 10px; width:210px;
+}
+.stat{display:flex; flex-direction:column; min-width:54px; line-height:1.15;}
+.stat span{font-size:12px; color:var(--muted);}
+.stat b{font-size:20px; font-variant-numeric:tabular-nums;}
+button.btn{
+  font:inherit; font-weight:700; cursor:pointer; border-radius:8px; padding:9px 16px;
+  border:2px solid var(--pen); background:var(--pen); color:#fff;
+}
+:root[data-theme="dark"] button.btn:not(.ghost-btn){color:#0B1226;}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) button.btn:not(.ghost-btn){color:#0B1226;} }
+button.btn.ghost-btn{background:transparent; color:var(--ink); border-color:var(--line);}
+button.btn:hover{filter:brightness(1.07);}
+:focus-visible{outline:3px solid var(--pen); outline-offset:2px;}
+
+.status{min-height:26px; margin:0 0 12px; font-weight:700;}
+.win{
+  background:var(--ok-bg); border:2px solid var(--ok); color:var(--ink);
+  border-radius:12px; padding:14px 18px; margin-bottom:16px;
+}
+.win h2{font-family:var(--serif); font-size:24px; margin:0 0 4px;}
+.win p{margin:0;}
+
+/* board */
+.board{display:grid; grid-template-columns:repeat(auto-fit,minmax(600px,1fr)); gap:10px 18px; margin-bottom:26px;}
+.row{
+  display:grid; grid-template-columns:28px minmax(120px,1fr) 200px 192px; gap:10px; align-items:center;
+  background:var(--card); border:2px solid var(--line); border-radius:12px; padding:8px 12px;
+}
+.row.done{border-color:var(--ok);}
+.pair{display:contents;}
+.letter{
+  width:28px; height:28px; border-radius:50%; background:var(--ink); color:var(--paper);
+  display:grid; place-items:center; font-weight:700; font-size:14px;
+}
+.ineq{font-family:var(--serif); font-size:20px; white-space:nowrap;}
+.ineq i{font-style:italic;}
+.ineq .or{font-family:var(--sans); font-size:14px; color:var(--muted); margin:0 2px;}
+
+/* slots and cards */
+.slot{
+  position:relative; height:52px; border:2px dashed var(--line); border-radius:9px; background:var(--slot);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.slot-hint{font-size:13px; color:var(--muted);}
+.slot.armed{border-color:var(--pen); background:var(--pen-soft);}
+.slot.over{border-style:solid; border-color:var(--pen); background:var(--pen-soft);}
+.slot.ok{border-style:solid; border-color:var(--ok); background:var(--ok-bg);}
+.slot.bad{border-style:solid; border-color:var(--bad); background:var(--bad-bg);}
+.slot.filled{border-style:solid;}
+.slot.locked{cursor:default;}
+.mark{
+  position:absolute; top:-9px; right:-9px; width:22px; height:22px; border-radius:50%;
+  display:grid; place-items:center; font-size:13px; font-weight:700; color:#fff; z-index:2;
+}
+.slot.ok .mark{background:var(--ok);}
+.slot.bad .mark{background:var(--bad);}
+:root[data-theme="dark"] .mark{color:#0B1226;}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .mark{color:#0B1226;} }
+
+.card{
+  width:100%; height:100%; min-height:48px; display:flex; align-items:center; gap:8px;
+  padding:3px 8px; background:var(--card); border:2px solid var(--line); border-radius:8px;
+  cursor:grab; user-select:none; -webkit-user-select:none;
+}
+.slot .card{border-color:transparent; background:transparent;}
+.card .tag{
+  flex:none; min-width:22px; height:22px; padding:0 4px; border-radius:11px; background:var(--pen-soft);
+  color:var(--pen); font-weight:700; font-size:13px; display:grid; place-items:center;
+}
+.card.iv .txt{font-family:var(--serif); font-size:17px; white-space:nowrap;}
+.card svg{flex:1; height:100%; min-width:0;}
+.card.selected{border-color:var(--ink); box-shadow:0 0 0 4px var(--hl);}
+.card.dragging{opacity:.45;}
+.card.locked{cursor:default;}
+.ghost{
+  min-height:52px; border:2px dashed var(--line); border-radius:8px; opacity:.55;
+}
+
+/* trays */
+.trays{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr)); gap:18px;}
+.panel{background:var(--card); border:2px solid var(--line); border-radius:12px; padding:12px 14px 16px;}
+.panel h2{font-family:var(--serif); font-size:20px; margin:0 0 10px; font-weight:600;}
+.pool{display:grid; gap:10px;}
+.pool.graphs{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}
+.pool.ivs{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));}
+.pool .card{height:52px;}
+
+/* number lines */
+.nl-base{stroke:var(--muted); stroke-width:1.6;}
+.nl-tick{stroke:var(--muted); stroke-width:1.4;}
+.nl-lbl{fill:var(--muted); font:11px var(--sans); text-anchor:middle;}
+.nl-lbl.key{fill:var(--ink); font-weight:700;}
+.nl-sol{stroke:var(--pen); stroke-width:5; stroke-linecap:butt;}
+.nl-arrow{fill:var(--pen);}
+.nl-closed{fill:var(--pen); stroke:var(--pen); stroke-width:2;}
+.nl-open{fill:var(--card); stroke:var(--pen); stroke-width:2.4;}
+
+@media (max-width:660px){
+  .wrap{padding:14px 12px 32px;}
+  .board{grid-template-columns:1fr;}
+  .row{grid-template-columns:28px 1fr; row-gap:8px;}
+  .pair{display:grid; grid-column:1 / -1; grid-template-columns:1fr 1fr; gap:10px;}
+  .controls input{width:100%;}
+}
+@media (prefers-reduced-motion:no-preference){
+  .slot,.card{transition:background-color .12s,border-color .12s;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Inequality and interval notation matching</h1>
+      <p class="sub">Every inequality needs one graph and one interval notation. Pick a card, then pick a slot, or drag the card there.</p>
+    </div>
+    <div class="controls">
+      <input id="team" type="text" placeholder="Team members" aria-label="Team members" autocomplete="off">
+      <div class="stat"><span>Time</span><b id="time">0:00</b></div>
+      <div class="stat"><span>Checks</span><b id="checks">0</b></div>
+      <button class="btn" id="checkBtn" type="button">Check matches</button>
+      <button class="btn ghost-btn" id="resetBtn" type="button">Start over</button>
+    </div>
+  </header>
+
+  <p class="status" id="status" aria-live="polite"></p>
+  <div id="winBox"></div>
+
+  <section class="board" id="board" aria-label="Matching board"></section>
+
+  <section class="trays" aria-label="Cards">
+    <div class="panel" data-panel="graph">
+      <h2>Graphs</h2>
+      <div class="pool graphs" id="graphPool"></div>
+    </div>
+    <div class="panel" data-panel="iv">
+      <h2>Interval notation</h2>
+      <div class="pool ivs" id="ivPool"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  /* ---------- content ---------- */
+  var s = function(a,aC,b,bC){ return {a:a,aC:!!aC,b:b,bC:!!bC}; };
+  var ROWS = [
+    {id:'A', g:'V', iv:9,  segs:[s(null,0,1,0), s(5,0,null,0)]},
+    {id:'B', g:'P', iv:7,  segs:[s(1,0,5,1)]},
+    {id:'C', g:'T', iv:10, segs:[s(null,0,1,1), s(5,0,null,0)]},
+    {id:'D', g:'W', iv:5,  segs:[s(1,0,5,0)]},
+    {id:'E', g:'N', iv:6,  segs:[s(1,1,5,0)]},
+    {id:'F', g:'R', iv:3,  segs:[s(null,0,5,0)]},
+    {id:'G', g:'U', iv:2,  segs:[s(5,1,null,0)]},
+    {id:'H', g:'X', iv:12, segs:[s(null,0,1,1), s(5,1,null,0)]},
+    {id:'I', g:'S', iv:4,  segs:[s(null,0,5,1)]},
+    {id:'J', g:'M', iv:1,  segs:[s(5,0,null,0)]},
+    {id:'K', g:'Q', iv:11, segs:[s(null,0,1,0), s(5,1,null,0)]},
+    {id:'L', g:'O', iv:8,  segs:[s(1,1,5,1)]}
+  ];
+  var TOTAL = ROWS.length * 2;
+
+  function ineqHTML(segs){
+    return segs.map(function(g){
+      if(g.a === null) return '<i>x</i> ' + (g.bC ? '\u2264' : '&lt;') + ' ' + g.b;
+      if(g.b === null) return '<i>x</i> ' + (g.aC ? '\u2265' : '&gt;') + ' ' + g.a;
+      return g.a + ' ' + (g.aC ? '\u2264' : '&lt;') + ' <i>x</i> ' + (g.bC ? '\u2264' : '&lt;') + ' ' + g.b;
+    }).join(' <span class="or">or</span> ');
+  }
+  function intervalText(segs){
+    return segs.map(function(g){
+      var l = g.a === null ? '(' : (g.aC ? '[' : '(');
+      var r = g.b === null ? ')' : (g.bC ? ']' : ')');
+      return l + (g.a === null ? '\u2212\u221E' : g.a) + ', ' + (g.b === null ? '\u221E' : g.b) + r;
+    }).join(' \u222A ');
+  }
+  function graphSVG(segs){
+    var NS = 'http://www.w3.org/2000/svg', Y = 19, X0 = 6, X1 = 194;
+    var px = function(v){ return 22 + v * 26; };
+    var h = '<svg viewBox="0 0 200 44" preserveAspectRatio="xMidYMid meet" xmlns="' + NS + '" aria-hidden="true">';
+    h += '<line class="nl-base" x1="' + X0 + '" y1="' + Y + '" x2="' + X1 + '" y2="' + Y + '"/>';
+    h += '<path class="nl-base" fill="none" d="M10 15 L5 19 L10 23 M190 15 L195 19 L190 23"/>';
+    for(var v = 0; v <= 6; v++){
+      var key = (v === 1 || v === 5);
+      h += '<line class="nl-tick" x1="' + px(v) + '" y1="' + (Y - 4) + '" x2="' + px(v) + '" y2="' + (Y + 4) + '"/>';
+      h += '<text class="nl-lbl' + (key ? ' key' : '') + '" x="' + px(v) + '" y="38">' + v + '</text>';
+    }
+    segs.forEach(function(g){
+      var xa = g.a === null ? X0 + 2 : px(g.a);
+      var xb = g.b === null ? X1 - 2 : px(g.b);
+      h += '<line class="nl-sol" x1="' + xa + '" y1="' + Y + '" x2="' + xb + '" y2="' + Y + '"/>';
+      if(g.a === null) h += '<path class="nl-arrow" d="M' + (X0 - 4) + ' ' + Y + ' L' + (X0 + 6) + ' ' + (Y - 6) + ' L' + (X0 + 6) + ' ' + (Y + 6) + ' Z"/>';
+      if(g.b === null) h += '<path class="nl-arrow" d="M' + (X1 + 4) + ' ' + Y + ' L' + (X1 - 6) + ' ' + (Y - 6) + ' L' + (X1 - 6) + ' ' + (Y + 6) + ' Z"/>';
+      if(g.a !== null) h += '<circle class="' + (g.aC ? 'nl-closed' : 'nl-open') + '" cx="' + px(g.a) + '" cy="' + Y + '" r="5"/>';
+      if(g.b !== null) h += '<circle class="' + (g.bC ? 'nl-closed' : 'nl-open') + '" cx="' + px(g.b) + '" cy="' + Y + '" r="5"/>';
+    });
+    return h + '</svg>';
+  }
+
+  /* ---------- cards ---------- */
+  var cards = {}, graphCards = [], ivCards = [], rowById = {};
+  ROWS.forEach(function(r){
+    rowById[r.id] = r;
+    var gc = {id:'g-' + r.g, type:'graph', label:r.g, segs:r.segs};
+    var ic = {id:'i-' + r.iv, type:'iv', label:String(r.iv), text:intervalText(r.segs), num:r.iv};
+    cards[gc.id] = gc; cards[ic.id] = ic;
+    graphCards.push(gc); ivCards.push(ic);
+  });
+  graphCards.sort(function(a,b){ return a.label < b.label ? -1 : 1; });
+  ivCards.sort(function(a,b){ return a.num - b.num; });
+
+  /* ---------- state ---------- */
+  var state;
+  var timerId = null;
+  function fresh(){
+    return {placed:{}, locked:{}, marks:{}, selected:null, checks:0, t0:null, elapsed:0, won:false,
+            msg:'Pick a card, then pick a slot.'};
+  }
+  state = fresh();
+
+  var $ = function(id){ return document.getElementById(id); };
+  function fmt(sec){ var m = Math.floor(sec / 60), r = sec % 60; return m + ':' + (r < 10 ? '0' : '') + r; }
+  function startTimer(){
+    if(state.t0 !== null) return;
+    state.t0 = Date.now();
+    timerId = setInterval(function(){
+      state.elapsed = Math.floor((Date.now() - state.t0) / 1000);
+      $('time').textContent = fmt(state.elapsed);
+    }, 500);
+  }
+  function stopTimer(){
+    if(timerId){ clearInterval(timerId); timerId = null; }
+    if(state.t0 !== null) state.elapsed = Math.floor((Date.now() - state.t0) / 1000);
+    $('time').textContent = fmt(state.elapsed);
+  }
+  function lockedCount(){ return Object.keys(state.locked).length; }
+  function locOf(id){
+    for(var k in state.placed){ if(state.placed[k] === id) return k; }
+    return null;
+  }
+  function slotType(key){ return key.split(':')[1]; }
+
+  function place(id, key){
+    if(slotType(key) !== cards[id].type) return false;
+    if(state.locked[key]) return false;
+    var prev = locOf(id);
+    if(prev && state.locked[prev]) return false;
+    if(prev){ delete state.placed[prev]; delete state.marks[prev]; }
+    state.placed[key] = id;
+    delete state.marks[key];
+    state.selected = null;
+    state.msg = 'Pick a card, then pick a slot.';
+    startTimer();
+    return true;
+  }
+  function pickUp(key){
+    var id = state.placed[key];
+    delete state.placed[key]; delete state.marks[key];
+    state.selected = id;
+  }
+  function sendBack(id){
+    var prev = locOf(id);
+    if(prev && !state.locked[prev]){ delete state.placed[prev]; delete state.marks[prev]; }
+  }
+
+  function check(){
+    var keys = Object.keys(state.placed).filter(function(k){ return !state.locked[k]; });
+    if(!keys.length){ state.msg = 'Place some cards first, then check.'; render(); return; }
+    state.checks++;
+    var wrong = 0;
+    keys.forEach(function(k){
+      var parts = k.split(':'), row = rowById[parts[0]];
+      var want = parts[1] === 'graph' ? 'g-' + row.g : 'i-' + row.iv;
+      if(state.placed[k] === want){ state.locked[k] = true; state.marks[k] = 'ok'; }
+      else { state.marks[k] = 'bad'; wrong++; }
+    });
+    var n = lockedCount();
+    if(n === TOTAL){
+      state.won = true; stopTimer(); state.msg = '';
+    } else if(wrong){
+      state.msg = n + ' of ' + TOTAL + ' correct. Move the cards marked \u2717 and check again.';
+    } else {
+      state.msg = n + ' of ' + TOTAL + ' correct. Keep going.';
+    }
+    render();
+  }
+
+  /* ---------- rendering ---------- */
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function cardEl(c, opts){
+    var d = el('div', 'card ' + c.type);
+    d.setAttribute('data-card', c.id);
+    d.appendChild(el('span', 'tag', c.label));
+    if(c.type === 'graph'){ d.insertAdjacentHTML('beforeend', graphSVG(c.segs)); }
+    else { d.appendChild(el('span', 'txt', c.text)); }
+    if(opts.locked){ d.classList.add('locked'); }
+    else { d.setAttribute('draggable', 'true'); }
+    if(opts.selected) d.classList.add('selected');
+    return d;
+  }
+
+  function render(){
+    var active = document.activeElement, fk = null;
+    if(active && active.getAttribute && active.closest && active.closest('.wrap')) fk = active.getAttribute('data-fk');
+
+    $('status').textContent = state.msg;
+    $('checks').textContent = state.checks;
+
+    var wb = $('winBox'); wb.innerHTML = '';
+    if(state.won){
+      var w = el('div', 'win');
+      w.appendChild(el('h2', null, 'All 12 sets matched'));
+      var team = $('team').value.trim();
+      var p = el('p');
+      p.textContent = (team ? team + '. ' : '') + 'Time ' + fmt(state.elapsed) + ', ' + state.checks + ' check' + (state.checks === 1 ? '' : 's') + '. Copy your matches onto your answer key.';
+      w.appendChild(p); wb.appendChild(w);
+    }
+
+    var selType = state.selected ? cards[state.selected].type : null;
+
+    var board = $('board'); board.innerHTML = '';
+    ROWS.forEach(function(r){
+      var row = el('div', 'row');
+      if(state.locked[r.id + ':graph'] && state.locked[r.id + ':iv']) row.classList.add('done');
+      row.appendChild(el('div', 'letter', r.id));
+      row.appendChild(el('div', 'ineq', ineqHTML(r.segs)));
+      var pair = el('div', 'pair');
+      ['graph', 'iv'].forEach(function(type){
+        var key = r.id + ':' + type;
+        var slot = el('div', 'slot ' + type);
+        slot.setAttribute('data-slot', key);
+        slot.setAttribute('data-fk', 's:' + key);
+        slot.setAttribute('tabindex', '0');
+        slot.setAttribute('role', 'button');
+        var occ = state.placed[key];
+        var label = 'Row ' + r.id + ' ' + (type === 'graph' ? 'graph' : 'interval notation') + ' slot';
+        if(occ){
+          slot.classList.add('filled');
+          slot.appendChild(cardEl(cards[occ], {locked: !!state.locked[key], selected:false}));
+          label += ', holds ' + (type === 'graph' ? 'graph ' : 'interval ') + cards[occ].label;
+        } else {
+          slot.appendChild(el('span', 'slot-hint', type === 'graph' ? 'graph' : 'interval'));
+          label += ', empty';
+        }
+        if(state.marks[key]){
+          slot.classList.add(state.marks[key]);
+          var m = el('span', 'mark', state.marks[key] === 'ok' ? '\u2713' : '\u2717');
+          slot.appendChild(m);
+          label += state.marks[key] === 'ok' ? ', correct' : ', not correct';
+        }
+        if(state.locked[key]){ slot.classList.add('locked'); slot.setAttribute('aria-disabled', 'true'); }
+        else if(selType === type){ slot.classList.add('armed'); }
+        slot.setAttribute('aria-label', label);
+        pair.appendChild(slot);
+      });
+      row.appendChild(pair);
+      board.appendChild(row);
+    });
+
+    function fillPool(poolId, list){
+      var pool = $(poolId); pool.innerHTML = '';
+      list.forEach(function(c){
+        if(locOf(c.id)){ pool.appendChild(el('div', 'ghost')); return; }
+        var d = cardEl(c, {locked:false, selected: state.selected === c.id});
+        d.setAttribute('data-tray', '1');
+        d.setAttribute('data-fk', 'c:' + c.id);
+        d.setAttribute('tabindex', '0');
+        d.setAttribute('role', 'button');
+        d.setAttribute('aria-label', (c.type === 'graph' ? 'Graph ' : 'Interval ') + c.label + (state.selected === c.id ? ', selected' : ''));
+        pool.appendChild(d);
+      });
+    }
+    fillPool('graphPool', graphCards);
+    fillPool('ivPool', ivCards);
+
+    if(fk){
+      var again = document.querySelector('[data-fk="' + fk + '"]');
+      if(again) again.focus();
+    }
+  }
+
+  /* ---------- interaction ---------- */
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if(!t.closest) return;
+    var tray = t.closest('[data-tray]');
+    if(tray){
+      var id = tray.getAttribute('data-card');
+      state.selected = (state.selected === id) ? null : id;
+      state.msg = state.selected ? 'Now pick a highlighted slot.' : 'Pick a card, then pick a slot.';
+      render(); return;
+    }
+    var slot = t.closest('[data-slot]');
+    if(slot){
+      var key = slot.getAttribute('data-slot');
+      if(state.locked[key]) return;
+      var occ = state.placed[key];
+      if(state.selected && cards[state.selected].type === slotType(key)){
+        place(state.selected, key);
+      } else if(occ){
+        pickUp(key);
+        state.msg = 'Card picked up. Pick a new slot for it.';
+      } else if(state.selected){
+        state.msg = 'That slot takes ' + (slotType(key) === 'graph' ? 'a graph' : 'an interval notation') + ', not this card.';
+      }
+      render();
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var t = e.target;
+    if(t && t.getAttribute && (t.hasAttribute('data-tray') || t.hasAttribute('data-slot'))){
+      e.preventDefault(); t.click();
+    }
+  });
+
+  var dragId = null;
+  function clearOver(){
+    var o = document.querySelectorAll('.slot.over');
+    for(var i = 0; i < o.length; i++) o[i].classList.remove('over');
+  }
+  document.addEventListener('dragstart', function(e){
+    var c = e.target.closest && e.target.closest('[data-card]');
+    if(!c){ return; }
+    dragId = c.getAttribute('data-card');
+    try{ e.dataTransfer.setData('text/plain', dragId); e.dataTransfer.effectAllowed = 'move'; }catch(_){}
+    c.classList.add('dragging');
+  });
+  document.addEventListener('dragend', function(e){
+    var c = e.target.closest && e.target.closest('.dragging');
+    if(c) c.classList.remove('dragging');
+    clearOver(); dragId = null;
+  });
+  document.addEventListener('dragover', function(e){
+    if(!dragId) return;
+    var type = cards[dragId].type;
+    var slot = e.target.closest && e.target.closest('[data-slot]');
+    if(slot){
+      var key = slot.getAttribute('data-slot');
+      if(slotType(key) === type && !state.locked[key]){
+        e.preventDefault(); clearOver(); slot.classList.add('over');
+      }
+      return;
+    }
+    var panel = e.target.closest && e.target.closest('[data-panel]');
+    if(panel && panel.getAttribute('data-panel') === type){ e.preventDefault(); clearOver(); }
+  });
+  document.addEventListener('drop', function(e){
+    if(!dragId) return;
+    var slot = e.target.closest && e.target.closest('[data-slot]');
+    var panel = e.target.closest && e.target.closest('[data-panel]');
+    if(slot){
+      e.preventDefault();
+      place(dragId, slot.getAttribute('data-slot'));
+    } else if(panel && panel.getAttribute('data-panel') === cards[dragId].type){
+      e.preventDefault();
+      sendBack(dragId);
+      state.selected = null;
+    } else { return; }
+    clearOver(); dragId = null;
+    render();
+  });
+
+  $('checkBtn').addEventListener('click', check);
+
+  var resetArmed = false, resetTimer = null;
+  $('resetBtn').addEventListener('click', function(){
+    var b = $('resetBtn');
+    if(!resetArmed){
+      resetArmed = true; b.textContent = 'Click again to clear';
+      resetTimer = setTimeout(function(){ resetArmed = false; b.textContent = 'Start over'; }, 3000);
+      return;
+    }
+    clearTimeout(resetTimer); resetArmed = false; b.textContent = 'Start over';
+    if(timerId){ clearInterval(timerId); timerId = null; }
+    state = fresh();
+    $('time').textContent = '0:00';
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
